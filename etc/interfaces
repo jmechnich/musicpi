@@ -1,0 +1,23 @@
+auto lo
+iface lo inet loopback
+
+allow-hotplug wlan0
+mapping wlan0
+	script /usr/local/sbin/switch_network.py
+	map KNOWN wlan0-known
+	map HOST  wlan0-host
+
+iface wlan0-known inet dhcp
+	wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+	post-up /usr/local/bin/ping_gateway.sh
+	
+iface wlan0-host inet static
+	address 192.168.178.1
+	netmask 255.255.255.0
+	post-up /usr/local/sbin/hostapd -B /etc/hostapd.conf.musicpi
+	post-up /usr/sbin/dnsmasq -C /etc/dnsmasq.conf.musicpi
+	pre-down /usr/bin/killall dnsmasq
+	pre-down /usr/bin/killall hostapd
+
+#auto eth0
+#iface eth0 inet dhcp

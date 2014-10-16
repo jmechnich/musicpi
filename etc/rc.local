@@ -1,0 +1,8 @@
+# start shairport as daemon 
+/usr/local/bin/shairport -d
+
+# start shutdown switch monitor
+/usr/local/sbin/gpio_shutdown_sw.py &
+
+# signal that startup is complete
+/usr/local/sbin/gpio_blinkled.py
