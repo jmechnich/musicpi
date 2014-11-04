@@ -1,4 +1,5 @@
 *~
 /tmp
 /src/musicpi_lcd
+/src/usbreset
 /sbin/usbreset
