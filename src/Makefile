@@ -1,8 +1,10 @@
 SBIN_PROGRAMS = usbreset
-PY_PACKAGES   = Adafruit_Python_CharLCD musicpi_lcd
+PYPACKAGES    = Adafruit_Python_CharLCD musicpi_lcd
 PACKAGES      = shairport gmrender-resurrect
 
 all: default
+
+usbreset: usbreset.c
 
 Adafruit_Python_CharLCD:
 	git clone git@github.com:adafruit/Adafruit_Python_CharLCD.git
@@ -16,21 +18,21 @@ shairport:
 gmrender-resurrect:
 	git clone git@github.com:hzeller/gmrender-resurrect.git
 
+SBINDIR         = ../sbin
+INST_PROGRAMS   = $(SBIN_PROGRAMS:%=$(SBINDIR)/%)
 PACKAGES_STAMPS = $(PACKAGES:%=.%.stamp)
 
-default: $(SBIN_PROGRAMS:%=../sbin/%) $(PACKAGES_STAMPS)
+default: $(INST_PROGRAMS) $(PACKAGES_STAMPS)
 
-%.stamp:
-	cd `echo $@ | sed 's,^\.\([^\.]\+\)\.stamp,\1,'` && make
+.%.stamp: %
+	cd $< && make
 	touch $@
 
-usbreset: usbreset.c
-
-../sbin/usbreset: usbreset
+$(SBINDIR)/%: %
 	cp $^ $@
 
-install: $(PY_PACKAGES) $(PACKAGES_STAMPS)
-	for p in $(PY_PACKAGES); do \
+install: $(PYPACKAGES) $(PACKAGES_STAMPS)
+	for p in $(PYPACKAGES); do \
 	  (cd $$p && python setup.py install); \
 	done
 	for p in $(PACKAGES); do\
@@ -38,4 +40,9 @@ install: $(PY_PACKAGES) $(PACKAGES_STAMPS)
 	done
 
 clean:
-	rm -f $(SBIN_PROGRAMS) *~
+	rm -f $(SBIN_PROGRAMS)
+	rm -f $(PACKAGES_STAMPS)
+	for p in $(PACKAGES); do\
+	  (cd $$p && make clean); \
+	done
+	find . -name '*~' | xargs rm -f
