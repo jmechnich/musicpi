@@ -1,5 +1,9 @@
 *~
 /tmp
+/src/Adafruit_Python_CharLCD
+/src/gmrender-resurrect
 /src/musicpi_lcd
+/src/shairport
 /src/usbreset
 /sbin/usbreset
+.*.stamp
