@@ -6,3 +6,5 @@
 
 # signal that startup is complete
 /usr/local/sbin/gpio_blinkled.py
+
+/usr/local/bin/musicpi-lcd -d
