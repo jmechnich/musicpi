@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, re, subprocess, sys, time
+import argparse, os, re, subprocess, sys, time
 
 from gps import *
 
@@ -139,14 +139,108 @@ class wpacli_parser(parser):
               'time'   : self.time
               })
 
+def detach():
+    stdin  = '/dev/null'
+    stdout = '/dev/null'
+    stderr = '/dev/null'
+    
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit first parent
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+        
+    # decouple from parent environment
+    os.chdir("/")
+    os.setsid()
+    os.umask(0)
+    
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit from second parent
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+       
+    # redirect standard file descriptors
+    sys.stdout.flush()
+    sys.stderr.flush()
+    si = file(stdin, 'r')
+    so = file(stdout, 'a+')
+    se = file(stderr, 'a+', 0)
+    os.dup2(si.fileno(), sys.stdin.fileno())
+    os.dup2(so.fileno(), sys.stdout.fileno())
+    os.dup2(se.fileno(), sys.stderr.fileno())
+
+def checkIfRunning(name, kill=False):
+    pidfile = os.path.join(os.environ['HOME'],".%s.pid" % name)
+    if not os.path.exists( pidfile):
+        return False
+    f = open(pidfile)
+    oldpid = int(f.readline().strip())
+    f.close()
+
+    cmdlinefile = os.path.join('/proc',str(oldpid),'cmdline')
+    if not os.path.exists( cmdlinefile):
+        return False
+    f = open(cmdlinefile)
+    args = f.readline().strip().split('\0')
+    f.close()
+    if len(args) > 1 and not args[0].endswith(name):
+        if not args[1].endswith(name):
+            return False
+
+    if kill:
+        try:
+            import signal, time
+            os.kill(oldpid, signal.SIGTERM)
+            time.sleep(1)
+            os.kill(oldpid, signal.SIGKILL)
+        except:
+            pass
+        return False
+    
+    return True
+    
+def createPIDFile(name):
+    pidfile = os.path.join(os.environ['HOME'],".%s.pid" % name)
+    f = open(pidfile, 'w')
+    print>>f, os.getpid()
+    f.close()
+    import atexit
+    atexit.register(lambda: os.path.exists(pidfile) and os.remove(pidfile))
+
 def main():
-    parser = argparse.ArgumentParser(description='scan_wlan,.py')
-    parser.add_argument( '-n', '--interval',    metavar='SECS', type=int, default=1,
+    name = os.path.basename(__file__)
+    parser = argparse.ArgumentParser(description=name)
+    parser.add_argument( '-d', '--daemon',
+                         help='run as daemon',   action="store_true")
+    parser.add_argument( '-k', '--kill-running',
+                         help='kill if running', action="store_true")
+    parser.add_argument( '-n', '--interval', metavar='SECS', type=int, default=1,
                          help='log data every SECS seconds (default: %(default)s)')
     parser.add_argument( '-m', '--mode', metavar='MODE', type=str, default='iwlist',
                          help='use either iwlist or wpacli backend (default: %(default)s)')
+    parser.add_argument( '-o', '--output', metavar='FILE', type=str, default='-',
+                         help='select output file (or - for stdout) (default: %(default)s)')
     cmdargs = parser.parse_args()
     
+    if checkIfRunning(name, kill=cmdargs.kill_running):
+        print "Already running, exiting"
+        sys.exit(0)
+
+    if cmdargs.daemon: detach()
+    createPIDFile(name)
+    
+    if cmdargs.output != '-':
+        sys.stdout = open(cmdargs.output, 'w')
+        
     if cmdargs.mode == 'iwlist':
         p = iwlist_parser()
     elif cmdargs.mode == 'wpacli':
