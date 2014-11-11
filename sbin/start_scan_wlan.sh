@@ -5,7 +5,7 @@ PATH=/usr/local/sbin:/usr/local/bin:$PATH
 PROGRAM=scan_wlan
 GPSUSER=gps
 
-OPTIONS="-d -n 5 -o"
+OPTIONS="-d -g -n 5 -o"
 OUTPATH=/home/$GPSUSER/wifi
 OUTFILE=`date +%Y%m%d-%H%M%S`.json
 

@@ -8,9 +8,11 @@ from datetime    import datetime
 from dateutil.tz import tzlocal
 
 class parser(object):
-    def __init__(self, device='wlan0'):
-        self.device = device
-
+    def __init__(self, device='wlan0', use_gps=True):
+        self.device  = device
+        self.use_gps = use_gps
+        self.gpsdata = None
+        
     def reset(self):
         self.nets = []
         self.current = {}
@@ -45,7 +47,8 @@ class parser(object):
     
     def update(self):
         self.reset()
-        self.gpsdata = self.location()
+        if self.use_gps:
+            self.gpsdata = self.location()
         self.time    = self.timestamp()
         try:
             output = self.execute()
@@ -58,8 +61,8 @@ class parser(object):
             time.sleep(5)
 
 class iwlist_parser(parser):
-    def __init__(self, device='wlan0'):
-        super(iwlist_parser,self).__init__(device)
+    def __init__(self, *args, **kwargs):
+        super(iwlist_parser,self).__init__(*args, **kwargs)
     
     def execute(self):
         return subprocess.check_output( ['iwlist', self.device, 'scan'] )
@@ -77,12 +80,13 @@ class iwlist_parser(parser):
             if len(self.current):
                 self.nets += [self.current]
                 self.current = {}
-            self.current.update({
+            self.current['time'] = self.time
+            if self.gpsdata:
+                self.current.update({
                     'lon'    : self.gpsdata[0],
                     'lat'    : self.gpsdata[1],
                     'gpstime': self.gpsdata[2],
-                    'time'   : self.time,
-                    })
+                })
             line = ' '.join(line.split('-')[1:]).strip()
     
         colon = line.find(':')
@@ -116,8 +120,8 @@ class iwlist_parser(parser):
             print
 
 class wpacli_parser(parser):
-    def __init__(self, device='wlan0'):
-        super(wpacli_parser,self).__init__(device)
+    def __init__(self, *args, **kwargs):
+        super(wpacli_parser,self).__init__(*args, **kwargs)
 
     def execute(self):
         subprocess.check_output(('wpa_cli -i %s scan' % self.device).split())
@@ -127,17 +131,21 @@ class wpacli_parser(parser):
         if not re.match( r'^[a-f0-9]{2}:.*', line):
             return
         bssid, freq, signal, flags, ssid = line.split()
-        self.nets.append(
-            { 'bssid'  : bssid,
-              'freq'   : freq,
-              'signal' : signal,
-              'flags'  : flags,
-              'ssid'   : ssid,
-              'lon'    : self.gpsdata[0],
-              'lat'    : self.gpsdata[1],
-              'gpstime': self.gpsdata[2],
-              'time'   : self.time
-              })
+        net = {
+            'bssid'  : bssid,
+            'freq'   : freq,
+            'signal' : signal,
+            'flags'  : flags,
+            'ssid'   : ssid,
+            'time'   : self.time,
+        }
+        if self.gpsdata:
+            net.update({
+                'lon'    : self.gpsdata[0],
+                'lat'    : self.gpsdata[1],
+                'gpstime': self.gpsdata[2],
+            })
+        self.nets.append( net)
 
 def detach():
     stdin  = '/dev/null'
@@ -229,6 +237,8 @@ def main():
                          help='use either iwlist or wpacli backend (default: %(default)s)')
     parser.add_argument( '-o', '--output', metavar='FILE', type=str, default='-',
                          help='select output file (or - for stdout) (default: %(default)s)')
+    parser.add_argument( '-g', '--gps',
+                         help="add location from GPS", action="store_true")
     cmdargs = parser.parse_args()
     
     if checkIfRunning(name, kill=cmdargs.kill_running):
@@ -242,9 +252,9 @@ def main():
         sys.stdout = open(cmdargs.output, 'w')
         
     if cmdargs.mode == 'iwlist':
-        p = iwlist_parser()
+        p = iwlist_parser(use_gps=cmdargs.gps)
     elif cmdargs.mode == 'wpacli':
-        p = wpacli_parser()
+        p = wpacli_parser(use_gps=cmdargs.gps)
     else:
         print "Unknown mode", cmdargs.mode
         return 1
