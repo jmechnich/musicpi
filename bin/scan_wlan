@@ -7,12 +7,48 @@ from gps import *
 from datetime    import datetime
 from dateutil.tz import tzlocal
 
+import math
+
+def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
+    if abs(lon1-lon2) < 1e-6 and abs(lat1-lat2) < 1e-6:
+        return 0
+    
+    # Convert latitude and longitude to 
+    # spherical coordinates in radians.
+    degrees_to_radians = math.pi/180.0
+    
+    # phi = 90 - latitude
+    phi1 = (90.0 - lat1)*degrees_to_radians
+    phi2 = (90.0 - lat2)*degrees_to_radians
+    
+    # theta = longitude
+    theta1 = lon1*degrees_to_radians
+    theta2 = lon2*degrees_to_radians
+    
+    # Compute spherical distance from spherical coordinates.
+    
+    # For two locations in spherical coordinates 
+    # (1, theta, phi) and (1, theta, phi)
+    # cosine( arc length ) = 
+    #    sin phi sin phi' cos(theta-theta') + cos phi cos phi'
+    # distance = rho * arc length
+    
+    cos = (math.sin(phi1)*math.sin(phi2)*math.cos(theta1 - theta2) + 
+           math.cos(phi1)*math.cos(phi2))
+    arc = math.acos( cos )
+
+    # Remember to multiply arc by the radius of the earth 
+    # in your favorite set of units to get length.
+    return arc * 6371000 # earth radius in meters
+
 class parser(object):
-    def __init__(self, device='wlan0', use_gps=True):
+    
+    def __init__(self, device='wlan0', use_gps=True, mindist=10):
         self.device  = device
         self.use_gps = use_gps
         self.gpsdata = None
-        
+        self.mindist = mindist
+
     def reset(self):
         self.nets = []
         self.current = {}
@@ -20,7 +56,7 @@ class parser(object):
     def dump_json(self):
         for n in self.nets:
             print n
-
+            
     def location(self):
         lon, lat, gpstime = 0, 0, ''
         session = gps(mode=WATCH_ENABLE)
@@ -39,7 +75,7 @@ class parser(object):
                     break
         session.close()
 
-        return (lon,lat,gpstime)
+        return type('gpsinfo',(object,),{'lon': lon, 'lat': lat, 'time': gpstime})
 
     def timestamp(self):
         localtime = datetime.now(tzlocal()).replace(microsecond=0)
@@ -48,7 +84,16 @@ class parser(object):
     def update(self):
         self.reset()
         if self.use_gps:
+            self.gpsdata_old = self.gpsdata if self.gpsdata else None
             self.gpsdata = self.location()
+            d = self.mindist
+            if self.gpsdata_old:
+                d = distance_on_unit_sphere(
+                    self.gpsdata_old.lon, self.gpsdata_old.lat,
+                    self.gpsdata.lon,     self.gpsdata.lat)
+            if d < self.mindist:
+                #print 'distance from last position: %f meters' % d
+                return
         self.time    = self.timestamp()
         try:
             output = self.execute()
@@ -83,9 +128,9 @@ class iwlist_parser(parser):
             self.current['time'] = self.time
             if self.gpsdata:
                 self.current.update({
-                    'lon'    : self.gpsdata[0],
-                    'lat'    : self.gpsdata[1],
-                    'gpstime': self.gpsdata[2],
+                    'lon'    : self.gpsdata.lon,
+                    'lat'    : self.gpsdata.lat,
+                    'gpstime': self.gpsdata.time,
                 })
             line = ' '.join(line.split('-')[1:]).strip()
     
@@ -141,9 +186,9 @@ class wpacli_parser(parser):
         }
         if self.gpsdata:
             net.update({
-                'lon'    : self.gpsdata[0],
-                'lat'    : self.gpsdata[1],
-                'gpstime': self.gpsdata[2],
+                'lon'    : self.gpsdata.lon,
+                'lat'    : self.gpsdata.lat,
+                'gpstime': self.gpsdata.time,
             })
         self.nets.append( net)
 
@@ -239,6 +284,8 @@ def main():
                          help='select output file (or - for stdout) (default: %(default)s)')
     parser.add_argument( '-g', '--gps',
                          help="add location from GPS", action="store_true")
+    parser.add_argument( '-l', '--mindist', metavar='METERS', type=float, default=10,
+                         help='minimum distance of gps track points (default: %(default)s)')
     cmdargs = parser.parse_args()
     
     if checkIfRunning(name, kill=cmdargs.kill_running):
@@ -250,11 +297,21 @@ def main():
     
     if cmdargs.output != '-':
         sys.stdout = open(cmdargs.output, 'w')
-        
+    
+    #def cleanup():
+    #    sys.stdout.flush()
+    #    sys.stdout.close()
+    #    
+    #import atexit
+    #atexit.register(cleanup)
+    #
+    #import signal
+    #signal.signal(signal.SIGTERM, lambda x,y: sys.exit(1))
+
     if cmdargs.mode == 'iwlist':
-        p = iwlist_parser(use_gps=cmdargs.gps)
+        p = iwlist_parser(use_gps=cmdargs.gps,mindist=cmdargs.mindist)
     elif cmdargs.mode == 'wpacli':
-        p = wpacli_parser(use_gps=cmdargs.gps)
+        p = wpacli_parser(use_gps=cmdargs.gps,mindist=cmdargs.mindist)
     else:
         print "Unknown mode", cmdargs.mode
         return 1
@@ -262,8 +319,9 @@ def main():
     while True:
         p.update()
         p.dump_json()
+        sys.stdout.flush()
         time.sleep(cmdargs.interval)
-
+    
 if __name__ == '__main__':
     try:
         main()
