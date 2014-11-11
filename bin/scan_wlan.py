@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import re, subprocess, sys, time
+import argparse, re, subprocess, sys, time
 
-from datetime import datetime
-from dateutil.tz import *
+from gps import *
+
+from datetime    import datetime
+from dateutil.tz import tzlocal
 
 class parser(object):
     def __init__(self, device='wlan0'):
@@ -16,13 +18,35 @@ class parser(object):
     def dump_json(self):
         for n in self.nets:
             print n
-    
+
+    def location(self):
+        lon, lat, gpstime = 0, 0, ''
+        session = gps(mode=WATCH_ENABLE)
+        for report in session:
+            if report['class'] == 'DEVICE':
+                # Clean up our current connection.
+                session.close()
+                # Tell gpsd we're ready to receive messages.
+                session = gps(mode=WATCH_ENABLE)
+                # Do more stuff
+            elif report['class'] == 'TPV':
+                if dict(report).has_key('lon') and dict(report).has_key('lat'):
+                    lon     = float(report['lon'])
+                    lat     = float(report['lat'])
+                    gpstime = str(report['time'])
+                    break
+        session.close()
+
+        return (lon,lat,gpstime)
+
     def timestamp(self):
         localtime = datetime.now(tzlocal()).replace(microsecond=0)
         return localtime.isoformat()
     
     def update(self):
         self.reset()
+        self.gpsdata = self.location()
+        self.time    = self.timestamp()
         try:
             output = self.execute()
             lines = output.split('\n')
@@ -53,7 +77,12 @@ class iwlist_parser(parser):
             if len(self.current):
                 self.nets += [self.current]
                 self.current = {}
-            self.current['time'] = self.timestamp()
+            self.current.update({
+                    'lon'    : self.gpsdata[0],
+                    'lat'    : self.gpsdata[1],
+                    'gpstime': self.gpsdata[2],
+                    'time'   : self.time,
+                    })
             line = ' '.join(line.split('-')[1:]).strip()
     
         colon = line.find(':')
@@ -99,21 +128,37 @@ class wpacli_parser(parser):
             return
         bssid, freq, signal, flags, ssid = line.split()
         self.nets.append(
-            { 'bssid' : bssid,
-              'freq'  : freq,
-              'signal': signal,
-              'flags' : flags,
-              'ssid'  : ssid,
-              'time'  : self.timestamp()
+            { 'bssid'  : bssid,
+              'freq'   : freq,
+              'signal' : signal,
+              'flags'  : flags,
+              'ssid'   : ssid,
+              'lon'    : self.gpsdata[0],
+              'lat'    : self.gpsdata[1],
+              'gpstime': self.gpsdata[2],
+              'time'   : self.time
               })
 
 def main():
-    #p = iwlist_parser()
-    p = wpacli_parser()
+    parser = argparse.ArgumentParser(description='scan_wlan,.py')
+    parser.add_argument( '-n', '--interval',    metavar='SECS', type=int, default=1,
+                         help='log data every SECS seconds (default: %(default)s)')
+    parser.add_argument( '-m', '--mode', metavar='MODE', type=str, default='iwlist',
+                         help='use either iwlist or wpacli backend (default: %(default)s)')
+    cmdargs = parser.parse_args()
+    
+    if cmdargs.mode == 'iwlist':
+        p = iwlist_parser()
+    elif cmdargs.mode == 'wpacli':
+        p = wpacli_parser()
+    else:
+        print "Unknown mode", cmdargs.mode
+        return 1
+    
     while True:
         p.update()
         p.dump_json()
-        time.sleep(1)
+        time.sleep(cmdargs.interval)
 
 if __name__ == '__main__':
     try:
