@@ -31,3 +31,9 @@ This project is heavily inspired by other distros serving a similar purpose, not
 ## Related projects
 
 - qmpc - MPD client for the Nokia N900 (https://github.com/jmechnich/qmpc)
+
+## Dependencies
+
+- python-dateutil
+- python-gps
+- python-rpi.gpio
