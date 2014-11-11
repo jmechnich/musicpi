@@ -1,0 +1,14 @@
+#!/bin/sh
+
+FILTERS="-x position,distance=10m"
+
+while [ $# -gt 0 ]; do
+    INFILE=$1
+    if [ ! -e $INFILE ]; then
+        shift
+        continue
+    fi
+    OUTFILE=`basename $INFILE | sed 's,\.nmea$,.gpx,'`
+    gpsbabel -i nmea -f $INFILE $FILTERS -o gpx -F $OUTFILE
+    shift
+done
