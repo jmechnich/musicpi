@@ -1,5 +1,5 @@
 SBIN_PROGRAMS = usbreset
-PYPACKAGES    = Adafruit_Python_CharLCD musicpi_lcd
+PYPACKAGES    = Adafruit_Python_CharLCD musicpi_lcd gpxpy
 PACKAGES      = shairport gmrender-resurrect
 
 all: default
@@ -17,6 +17,9 @@ shairport:
 
 gmrender-resurrect:
 	git clone git@github.com:hzeller/gmrender-resurrect.git
+
+gpxpy:
+	git clone git@github.com:tkrajina/gpxpy.git
 
 SBINDIR         = ../sbin
 INST_PROGRAMS   = $(SBIN_PROGRAMS:%=$(SBINDIR)/%)

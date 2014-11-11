@@ -7,4 +7,7 @@
 # signal that startup is complete
 /usr/local/sbin/gpio_blinkled.py
 
+# start gpxlogger
+/usr/local/sbin/start_gpxlogger.sh > /var/log/gpxlogger.log 2>&1 &
+
 /usr/local/bin/musicpi-lcd -d
