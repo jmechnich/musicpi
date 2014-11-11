@@ -1,6 +1,8 @@
 #!/bin/sh
 
-./cleanup.sh || exit 1
+set -e
+
+./cleanup.sh
 
 do_symlink()
 {
@@ -9,7 +11,7 @@ do_symlink()
         echo "Invalid arguments: $@"
         exit 1
     fi
-    sudo ln -sf "$1" "$2" || exit 1
+    sudo ln -sf "$1" "$2"
 }
 
 do_copy()
@@ -19,8 +21,8 @@ do_copy()
         echo "Invalid arguments: $@"
         exit 1
     fi
-    sudo rm -f $2 || exit 1
-    sudo cp $1 $2 || exit 1
+    sudo rm -f $2
+    sudo cp $1 $2
 }
 
 (cd src && make) || exit 1
