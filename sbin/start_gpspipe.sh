@@ -2,12 +2,12 @@
 
 PATH=/usr/local/sbin:$PATH
 
-PROGRAM=gpxlogger
+PROGRAM=gpspipe
 GPSUSER=gps
 
-OPTIONS="-d -m 10 -f"
-OUTPATH=/home/$GPSUSER/gpx
-OUTFILE=`date +%Y%m%d-%H%M%S`.gpx
+OPTIONS="-r -d -o"
+OUTPATH=/home/$GPSUSER/nmea
+OUTFILE=`date +%Y%m%d-%H%M%S`.nmea
 
 PROGRAM_PID=`ps aux| awk '$1 ~ /^'${GPSUSER}'$/ && $11 ~ /'$PROGRAM'$/ { print $2 }'`
 if [ x$PROGRAM_PID != x ]; then
