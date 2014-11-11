@@ -36,6 +36,8 @@ do_symlink "$PWD/etc/dnsmasq.hosts"   /etc/dnsmasq.hosts
 do_symlink "$PWD/etc/hostapd.conf"    /etc/hostapd.conf.musicpi
 do_copy    "$PWD/etc/smbd.service"    /etc/avahi/services/smbd.service
 do_copy    "$PWD/etc/start_gpxlogger" /etc/cron.d/start_gpxlogger
+do_copy    "$PWD/etc/start_gpspipe"   /etc/cron.d/start_gpspipe
+do_copy    "$PWD/etc/start_scan_wlan" /etc/cron.d/start_scan_wlan
 
 echo "Updating   /etc/rc.local"
 if grep -q '^\. .*etc/rc\.local' /etc/rc.local; then

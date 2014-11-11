@@ -1,3 +1,5 @@
+# -*- mode: sh -*-
+
 # start shairport as daemon 
 /usr/local/bin/shairport -d
 
@@ -7,7 +9,17 @@
 # signal that startup is complete
 /usr/local/sbin/gpio_blinkled.py
 
-# start gpxlogger
-/usr/local/sbin/start_gpxlogger.sh > /var/log/gpxlogger.log 2>&1 &
+# make sure that logging dir exists
+mkdir -p /var/log/musicpi
 
+# start gpxlogger
+(sleep 40 && /usr/local/sbin/start_gpxlogger.sh > /var/log/musicpi/gpxlogger.log 2>&1) &
+
+# start gpspipe
+(sleep 45 && /usr/local/sbin/start_gpspipe.sh   > /var/log/musicpi/gpspipe.log   2>&1) &
+
+# start scan_wlan
+(sleep 50 && /usr/local/sbin/start_scan_wlan.sh > /var/log/musicpi/scan_wlan.log 2>&1) &
+
+# start LCD display
 /usr/local/bin/musicpi-lcd -d
