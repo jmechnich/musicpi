@@ -70,14 +70,14 @@ def _get_gps_time():
     maxtries = 10
     
     session = gps.gps(mode=gps.WATCH_ENABLE)
-    try:
-        while not gpsinfo and maxtries:
-            report = session.next()
-            if report['class'] == 'TPV':
-                gpsinfo = dict(report)
-            maxtries -= 1
-    except StopIteration:
-        pass
+    for report in session:
+        if maxtries == 0:
+            break
+        if report['class'] == 'TPV':
+            gpsinfo = dict(report)
+            if gpsinfo.has_key('time'):
+                break
+        maxtries -= 1
     session.close()
     if gpsinfo and gpsinfo.has_key('time'):
         return dateutil.parser.parse(gpsinfo['time']).astimezone(tzlocal())
