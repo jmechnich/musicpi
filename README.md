@@ -7,9 +7,10 @@ A collection of scripts for running a Raspberry Pi based music server
 
 - Trimmed down standard Raspbian Wheezy system (~1.5 GB)
 - Music collection stored on USB disk
-- Additional music can be stored on a ramdisk temporily
+- Additional music can be stored on a ramdisk temporarily
 - File access via *samba*
-- Music playback via *MPD* and *shairport* (https://github.com/abrasive/shairport)
+- Music playback via *MPD*
+- Audio streaming via *gmediarender-resurrect* (UPnP) and *shairport* (Airplay)
 - Automount usb device with *usbmount*
 - Use *hostapd* to provide own (unencrypted) wifi network for easy access and remote control of MPD
 - Use RPi GPIO to signal system state changes with an LED and monitor a shutdown switch
