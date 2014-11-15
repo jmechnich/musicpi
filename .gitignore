@@ -6,5 +6,6 @@
 /src/shairport
 /src/usbreset
 /src/gpxpy
+/src/ympd
 /sbin/usbreset
 .*.stamp

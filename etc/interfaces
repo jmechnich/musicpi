@@ -19,5 +19,5 @@ iface wlan0-host inet static
 	pre-down /usr/bin/killall dnsmasq
 	pre-down /usr/bin/killall hostapd
 
-#auto eth0
-#iface eth0 inet dhcp
+allow-hotplug eth0
+iface eth0 inet dhcp

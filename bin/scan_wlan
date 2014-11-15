@@ -10,7 +10,7 @@ from dateutil.tz import tzlocal
 import math
 
 def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
-    if abs(lon1-lon2) < 1e-6 and abs(lat1-lat2) < 1e-6:
+    if abs(lon1-lon2) < 1e-10 and abs(lat1-lat2) < 1e-10:
         return 0
     
     # Convert latitude and longitude to 
@@ -39,7 +39,7 @@ def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
 
     # Remember to multiply arc by the radius of the earth 
     # in your favorite set of units to get length.
-    return arc * 6371000 # earth radius in meters
+    return arc
 
 class parser(object):
     
@@ -88,7 +88,7 @@ class parser(object):
             self.gpsdata = self.location()
             d = self.mindist
             if self.gpsdata_old:
-                d = distance_on_unit_sphere(
+                d =  6371000 * distance_on_unit_sphere(
                     self.gpsdata_old.lon, self.gpsdata_old.lat,
                     self.gpsdata.lon,     self.gpsdata.lat)
             if d < self.mindist:
