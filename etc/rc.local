@@ -37,7 +37,7 @@ start_musicpi_services()
     mpc play 2>/dev/null
 
     # start MPD webinterface
-    PATH=$MUSICPI_PATH ympd -p 80 -u mpd &
+    PATH=$MUSICPI_PATH ympd -w 80 -u mpd >/dev/null 2>&1 &
 }
 
 start_musicpi_services
