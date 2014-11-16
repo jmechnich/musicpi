@@ -9,6 +9,8 @@ from dateutil.tz import tzlocal
 
 import math
 
+from musicpi_lcd.daemon import detach, check_if_running, create_pid_file
+
 def distance_on_unit_sphere(lon1, lat1, lon2, lat2):
     if abs(lon1-lon2) < 1e-10 and abs(lat1-lat2) < 1e-10:
         return 0
@@ -192,83 +194,6 @@ class wpacli_parser(parser):
             })
         self.nets.append( net)
 
-def detach():
-    stdin  = '/dev/null'
-    stdout = '/dev/null'
-    stderr = '/dev/null'
-    
-    try:
-        pid = os.fork()
-        if pid > 0:
-            # exit first parent
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
-        sys.exit(1)
-        
-    # decouple from parent environment
-    os.chdir("/")
-    os.setsid()
-    os.umask(0)
-    
-    # do second fork
-    try:
-        pid = os.fork()
-        if pid > 0:
-            # exit from second parent
-            sys.exit(0)
-    except OSError, e:
-        sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-        sys.exit(1)
-       
-    # redirect standard file descriptors
-    sys.stdout.flush()
-    sys.stderr.flush()
-    si = file(stdin, 'r')
-    so = file(stdout, 'a+')
-    se = file(stderr, 'a+', 0)
-    os.dup2(si.fileno(), sys.stdin.fileno())
-    os.dup2(so.fileno(), sys.stdout.fileno())
-    os.dup2(se.fileno(), sys.stderr.fileno())
-
-def checkIfRunning(name, kill=False):
-    pidfile = os.path.join(os.environ['HOME'],".%s.pid" % name)
-    if not os.path.exists( pidfile):
-        return False
-    f = open(pidfile)
-    oldpid = int(f.readline().strip())
-    f.close()
-
-    cmdlinefile = os.path.join('/proc',str(oldpid),'cmdline')
-    if not os.path.exists( cmdlinefile):
-        return False
-    f = open(cmdlinefile)
-    args = f.readline().strip().split('\0')
-    f.close()
-    if len(args) > 1 and not args[0].endswith(name):
-        if not args[1].endswith(name):
-            return False
-
-    if kill:
-        try:
-            import signal, time
-            os.kill(oldpid, signal.SIGTERM)
-            time.sleep(1)
-            os.kill(oldpid, signal.SIGKILL)
-        except:
-            pass
-        return False
-    
-    return True
-    
-def createPIDFile(name):
-    pidfile = os.path.join(os.environ['HOME'],".%s.pid" % name)
-    f = open(pidfile, 'w')
-    print>>f, os.getpid()
-    f.close()
-    import atexit
-    atexit.register(lambda: os.path.exists(pidfile) and os.remove(pidfile))
-
 def main():
     name = os.path.basename(__file__)
     parser = argparse.ArgumentParser(description=name)
@@ -288,26 +213,16 @@ def main():
                          help='minimum distance of gps track points (default: %(default)s)')
     cmdargs = parser.parse_args()
     
-    if checkIfRunning(name, kill=cmdargs.kill_running):
+    if check_if_running(name, kill=cmdargs.kill_running):
         print "Already running, exiting"
         sys.exit(0)
 
     if cmdargs.daemon: detach()
-    createPIDFile(name)
+    create_pid_file(name)
     
     if cmdargs.output != '-':
         sys.stdout = open(cmdargs.output, 'w')
     
-    #def cleanup():
-    #    sys.stdout.flush()
-    #    sys.stdout.close()
-    #    
-    #import atexit
-    #atexit.register(cleanup)
-    #
-    #import signal
-    #signal.signal(signal.SIGTERM, lambda x,y: sys.exit(1))
-
     if cmdargs.mode == 'iwlist':
         p = iwlist_parser(use_gps=cmdargs.gps,mindist=cmdargs.mindist)
     elif cmdargs.mode == 'wpacli':
