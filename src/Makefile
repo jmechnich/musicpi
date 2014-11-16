@@ -1,5 +1,5 @@
 SBIN_PROGRAMS = usbreset
-PYPACKAGES    = Adafruit_Python_CharLCD musicpi_lcd gpxpy
+PYPACKAGES    = Adafruit_Python_CharLCD musicpi_lcd gpxpy python-presence
 PACKAGES      = shairport gmrender-resurrect ympd
 
 all: default
@@ -24,11 +24,17 @@ gpxpy:
 ympd:
 	git clone git@github.com:jmechnich/ympd.git
 
+python-presence:
+	git clone git@github.com:jmechnich/python-presence.git
+
 SBINDIR         = ../sbin
 INST_PROGRAMS   = $(SBIN_PROGRAMS:%=$(SBINDIR)/%)
 PACKAGES_STAMPS = $(PACKAGES:%=.%.stamp)
 
 default: $(INST_PROGRAMS) $(PACKAGES_STAMPS)
+	for p in $(PYPACKAGES); do \
+	  (cd $$p && python setup.py build); \
+	done
 
 .%.stamp: %
 	cd $< && make

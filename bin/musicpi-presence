@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+
+import os, subprocess, logging
+
+from presence.presence import Presence
+from presence.bot      import PresenceBot
+
+def print_dir(d):
+    fill = ' '*4
+    ret = 'Contents of "%s"<br/>' % d 
+    entries = os.listdir(d)
+    for entry in entries:
+        stat = os.stat(os.path.join(d,entry))
+        printname = entry
+        if os.path.isdir(entry):
+            printname = '[%s]' % printname
+        elif os.path.isfile(entry):
+            printname = '%s' % printname
+        ret += fill + ("%s<br/>" % printname)
+    if not len(entries):
+        ret += 'No files found'
+    return ret
+
+def call_mpc(command):
+    ret = ''
+    try:
+        ret = subprocess.check_output(
+            command.split(), stderr=subprocess.STDOUT)
+    except:
+        ret += 'Error executing "%s"' % command
+    return ret.replace('\n','<br/>')
+
+def main():
+    logger = logging.getLogger('musicpi-presence')
+    logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+
+    # logging to console
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    logger.addHandler(consoleHandler)
+    
+    logger.setLevel( logging.INFO)
+    
+    p = PresenceBot()
+    p.listen()
+    
+    client_args = {
+        'name': 'musicpi',
+        'downloaddir': '/media/ramdisk',
+        'commands': {
+            'ls': Presence.make_command(
+                func=staticmethod(lambda x: x.send_message_html(print_dir('/media/ramdisk'))),
+                helptext='list ramdisk contents'),
+            'mpc': Presence.make_command(
+                func=staticmethod(lambda x: x.send_message_html(call_mpc(x.message))),
+                helptext='call mpc',
+                greedy=True),
+            }
+        }
+    try:
+        while True:
+            p.wait_for_connect(client_args)
+    except KeyboardInterrupt:
+        logger.info("Interrupted by user")
+    
+    p.cleanup()
+
+if __name__ == '__main__':
+    main()
