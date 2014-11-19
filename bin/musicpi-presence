@@ -2,12 +2,12 @@
 
 import os, subprocess, logging
 
-from presence.presence import Presence
-from presence.bot      import PresenceBot
+from presence.bot    import PresenceBot
+from presence.client import ClientThread
 
 def print_dir(d):
     fill = ' '*4
-    ret = 'Contents of "%s"<br/>' % d 
+    ret = 'Contents of "%s"\n' % d 
     entries = os.listdir(d)
     for entry in entries:
         stat = os.stat(os.path.join(d,entry))
@@ -16,7 +16,7 @@ def print_dir(d):
             printname = '[%s]' % printname
         elif os.path.isfile(entry):
             printname = '%s' % printname
-        ret += fill + ("%s<br/>" % printname)
+        ret += fill + ("%s\n" % printname)
     if not len(entries):
         ret += 'No files found'
     return ret
@@ -28,35 +28,36 @@ def call_mpc(command):
             command.split(), stderr=subprocess.STDOUT)
     except:
         ret += 'Error executing "%s"' % command
-    return ret.replace('\n','<br/>')
+    return ret
 
 def main():
     logger = logging.getLogger('musicpi-presence')
-    logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
+    logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] [%(threadName)s]  %(message)s")
 
     # logging to console
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
     logger.addHandler(consoleHandler)
     
-    logger.setLevel( logging.INFO)
+    logger.setLevel( logging.DEBUG)
     
-    p = PresenceBot()
+    p = PresenceBot(logger=logger)
     p.listen()
+    
+    commands = {
+        'ls': ClientThread.make_command(
+            func=staticmethod(lambda client, message: client.send_ascii(print_dir('/media/ramdisk'))),
+            helptext='list ramdisk contents'),
+        'mpc': ClientThread.make_command(
+            func=staticmethod(lambda client, message: client.send_ascii(call_mpc(message.ascii))),
+            helptext='call mpc',
+            greedy=True),
+        }
     
     client_args = {
         'name': 'musicpi',
         'downloaddir': '/media/ramdisk',
-        'commands': {
-            'ls': Presence.make_command(
-                func=staticmethod(lambda x: x.send_message_html(print_dir('/media/ramdisk'))),
-                helptext='list ramdisk contents'),
-            'mpc': Presence.make_command(
-                func=staticmethod(lambda x: x.send_message_html(call_mpc(x.message))),
-                helptext='call mpc',
-                greedy=True),
-            }
-        }
+        'commands': commands }
     try:
         while True:
             p.wait_for_connect(client_args)
