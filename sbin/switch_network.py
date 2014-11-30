@@ -9,14 +9,17 @@ def scan_essids():
     lines = [ line.strip().replace('"','').split(':')[1] for line in subprocess.check_output(
         ["/sbin/iwlist","wlan0","scan"]).split("\n")
               if line.strip().startswith("ESSID") ]
-    return list(set(lines))
+    
+    lines = list(set(lines))
+    return [ l for l in lines if len(l) ]
 
 def scan_wpasupplicant():
     wspath = "/etc/wpa_supplicant/wpa_supplicant.conf"
     if not os.path.exists(wspath): return []
     lines = [ line.strip().replace('"','').split('=')[1] for line in open(wspath)
-              if line.strip().startswith("ssid")]
-    return lines
+              if line.strip().startswith("ssid") ]
+    
+    return [ l for l in lines if len(l) ]
 	
 
 subprocess.call(["/sbin/ifconfig","wlan0","up"])
