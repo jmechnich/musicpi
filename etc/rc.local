@@ -24,7 +24,7 @@ start_musicpi_services()
     (sleep 45 && PATH=$MUSICPI_PATH start_gpspipe.sh   > $LOGDIR/gpspipe.log   2>&1) &
 
     # start scan_wlan
-    (sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
+    #(sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
     
     # start LCD display
     PATH=$MUSICPI_PATH musicpi-lcd -d -l $LOGDIR/musicpi-lcd.log -v
