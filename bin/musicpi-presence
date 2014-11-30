@@ -1,25 +1,9 @@
 #!/usr/bin/env python
 
-import os, subprocess, logging
+import argparse, subprocess
 
-from presence.server import PresenceServer
+from presence.main   import main
 from presence.client import ClientThread
-
-def print_dir(d):
-    fill = ' '*4
-    ret = 'Contents of "%s"\n' % d 
-    entries = os.listdir(d)
-    for entry in entries:
-        stat = os.stat(os.path.join(d,entry))
-        printname = entry
-        if os.path.isdir(entry):
-            printname = '[%s]' % printname
-        elif os.path.isfile(entry):
-            printname = '%s' % printname
-        ret += fill + ("%s\n" % printname)
-    if not len(entries):
-        ret += 'No files found'
-    return ret
 
 def call_mpc(command):
     ret = ''
@@ -30,24 +14,16 @@ def call_mpc(command):
         ret += 'Error executing "%s"' % command
     return ret
 
-def main():
-    logger = logging.getLogger('musicpi-presence')
-    logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] [%(threadName)s]  %(message)s")
-
-    # logging to console
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    logger.addHandler(consoleHandler)
-    
-    logger.setLevel( logging.DEBUG)
-    
-    p = PresenceServer(logger=logger)
-    p.listen()
+if __name__ == '__main__':
+    name = 'musicpi-presence'
+    parser = argparse.ArgumentParser(description=name)
+    parser.add_argument( '-d', '--daemon',  action="store_true",
+                         help='run as daemon')
+    parser.add_argument( '-v', '--verbose', action="store_true",
+                         help='')
+    args = parser.parse_args()
     
     commands = {
-        'ls': ClientThread.make_command(
-            func=staticmethod(lambda client, message: client.send_ascii(print_dir('/media/ramdisk'))),
-            helptext='list ramdisk contents'),
         'mpc': ClientThread.make_command(
             func=staticmethod(lambda client, message: client.send_ascii(call_mpc(message.ascii))),
             helptext='call mpc',
@@ -58,13 +34,5 @@ def main():
         'name': 'musicpi',
         'downloaddir': '/media/ramdisk',
         'commands': commands }
-    try:
-        while True:
-            p.wait_for_connect(client_args)
-    except KeyboardInterrupt:
-        logger.info("Interrupted by user")
-    
-    p.cleanup()
 
-if __name__ == '__main__':
-    main()
+    main(name, args.daemon, args.verbose, client_args)
