@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-import argparse, subprocess
-
 from presence.main   import main
 from presence.client import ClientThread
+
+import subprocess
 
 def call_mpc(command):
     ret = ''
@@ -15,14 +15,6 @@ def call_mpc(command):
     return ret
 
 if __name__ == '__main__':
-    name = 'musicpi-presence'
-    parser = argparse.ArgumentParser(description=name)
-    parser.add_argument( '-d', '--daemon',  action="store_true",
-                         help='run as daemon')
-    parser.add_argument( '-v', '--verbose', action="store_true",
-                         help='')
-    args = parser.parse_args()
-    
     commands = {
         'mpc': ClientThread.make_command(
             func=staticmethod(lambda client, message: client.send_ascii(call_mpc(message.ascii))),
@@ -31,8 +23,7 @@ if __name__ == '__main__':
         }
     
     client_args = {
-        'name': 'musicpi.local',
         'downloaddir': '/media/ramdisk',
         'commands': commands }
 
-    main(name, args.daemon, args.verbose, client_args)
+    main('musicpi-presence', client_args)
