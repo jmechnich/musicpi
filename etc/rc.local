@@ -38,6 +38,8 @@ start_musicpi_services()
 
     # start MPD webinterface
     PATH=$MUSICPI_PATH ympd -w 80 -u mpd >/dev/null 2>&1 &
+
+    PATH=$MUSICPI_PATH musicpi-presence -d
 }
 
 start_musicpi_services
