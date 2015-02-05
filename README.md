@@ -25,7 +25,7 @@ A collection of scripts for running a Raspberry Pi based music server
 
 ## Random comments
 
-This project is heavily inspired by other distros serving a similar purpose, notably volumio (http://volumio.org) which has a great UI and runs very smoothly unless you want to customize the system (broken packages, non-standard daemon management, etc)
+This project is heavily inspired by other distros serving a similar purpose, notably volumio (http://volumio.org) which has a great UI and runs very smoothly unless you want to customize the system (broken packages, non-standard daemon management, etc).
 
 ## Related projects
 
@@ -38,3 +38,28 @@ This project is heavily inspired by other distros serving a similar purpose, not
 - python-rpi.gpio
 - cmake
 - libmpdclient-dev
+
+## Hardware
+
+After multiple iterations the final system consists of:
+
+- Unused WD external harddisk case
+- Raspberry Pi Model B
+- Adafruit 16x2 RGB LCD Pi Plate
+- Adafruit PermaProto Pi
+- Adafruit Ultimate GPS Breakout
+- Edimax EW-7811Un Wireless Adapter
+- Red status LED
+- Power off switch
+- WD Elements 2.5" HDD 1TB
+
+An external USB hub was used at some point along the way but has proven itself to be just an additional source of power-related instabilities. It was removed and the 5V DC supply for the micro USB connector connected directly to the power input. As a downside, no additional USB ports are available.
+
+#### Outside view
+![](https://raw.github.com/jmechnich/musicpi/master/pics/Outside.jpg)
+
+#### Inside view
+![](https://raw.github.com/jmechnich/musicpi/master/pics/Inside.jpg)
+
+#### Connectors
+![](https://raw.github.com/jmechnich/musicpi/master/pics/Connectors.jpg)
