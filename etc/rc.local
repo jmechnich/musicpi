@@ -17,18 +17,22 @@ start_musicpi_services()
     # make sure that logging dir exists
     mkdir -p $LOGDIR
     
-    # start gpxlogger
-    (sleep 40 && PATH=$MUSICPI_PATH start_gpxlogger.sh > $LOGDIR/gpxlogger.log 2>&1) &
-
-    # start gpspipe
-    (sleep 45 && PATH=$MUSICPI_PATH start_gpspipe.sh   > $LOGDIR/gpspipe.log   2>&1) &
-
-    # start scan_wlan
-    #(sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
+    if [ x`pgrep gpsd` != x ]; then
+        # start gpxlogger
+        (sleep 40 && PATH=$MUSICPI_PATH start_gpxlogger.sh > $LOGDIR/gpxlogger.log 2>&1) &
+        
+        # start gpspipe
+        (sleep 45 && PATH=$MUSICPI_PATH start_gpspipe.sh   > $LOGDIR/gpspipe.log   2>&1) &
+        
+        # start scan_wlan
+        (sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
+    fi
     
-    # start LCD display
-    PATH=$MUSICPI_PATH musicpi-lcd -d -l $LOGDIR/musicpi-lcd.log -v
-
+    if [ -x /dev/i2c-1 ]; then
+        # start LCD display
+        PATH=$MUSICPI_PATH musicpi-lcd -d -l $LOGDIR/musicpi-lcd.log -v
+    fi
+    
     # start MPD playback
     if [ `mpc playlist 2>/dev/null | wc -l` -eq 0 ]; then
         mpc load Favorites 2>/dev/null
@@ -41,5 +45,8 @@ start_musicpi_services()
 
     PATH=$MUSICPI_PATH musicpi-presence -d
 }
+
+# set audio level to 0db
+amixer set PCM 0
 
 start_musicpi_services
