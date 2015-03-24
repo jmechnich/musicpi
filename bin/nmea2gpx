@@ -5,12 +5,19 @@ set -e
 FILTERS="-x position,distance=10m"
 
 while [ $# -gt 0 ]; do
-    INFILE=$1
-    if [ ! -e $INFILE ]; then
-        shift
-        continue
-    fi
-    OUTFILE=`basename $INFILE | sed 's,\.nmea$,.gpx,'`
-    gpsbabel -i nmea -f $INFILE $FILTERS -o gpx -F $OUTFILE
+    INFILE="$1"
     shift
+    if [ ! -e "$INFILE" ]; then
+        echo "$INFILE does not exist"
+        exit 1
+    fi
+    OUTFILE=`basename "$INFILE" | sed 's,\.nmea$,.gpx,'`
+    if [ -e "$OUTFILE" ] ; then
+        if [ "$OUTFILE" -nt "$INFILE" ]; then
+            echo "Skipping $INFILE ($OUTFILE up-to-date)"
+            continue
+        fi
+    fi
+    echo "Processing $INFILE (writing to $OUTFILE)"
+    gpsbabel -i nmea -f "$INFILE" $FILTERS -o gpx -F "$OUTFILE"
 done
