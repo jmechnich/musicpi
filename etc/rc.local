@@ -28,7 +28,7 @@ start_musicpi_services()
         #(sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
     fi
     
-    if [ -x /dev/i2c-1 ]; then
+    if [ -e /dev/i2c-1 ]; then
         # start LCD display
         PATH=$MUSICPI_PATH musicpi-lcd -d -l $LOGDIR/musicpi-lcd.log -v
     fi
