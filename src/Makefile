@@ -31,7 +31,7 @@ SBINDIR         = ../sbin
 INST_PROGRAMS   = $(SBIN_PROGRAMS:%=$(SBINDIR)/%)
 PACKAGES_STAMPS = $(PACKAGES:%=.%.stamp)
 
-default: $(INST_PROGRAMS) $(PACKAGES_STAMPS)
+default: $(INST_PROGRAMS) $(PACKAGES_STAMPS) $(PYPACKAGES)
 	for p in $(PYPACKAGES); do \
 	  (cd $$p && python setup.py build); \
 	done

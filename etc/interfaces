@@ -18,6 +18,3 @@ iface wlan0-host inet static
 	post-up /usr/sbin/dnsmasq -C /etc/dnsmasq.conf.musicpi
 	pre-down /usr/bin/killall dnsmasq
 	pre-down /usr/bin/killall hostapd
-
-allow-hotplug eth0
-iface eth0 inet dhcp

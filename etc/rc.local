@@ -25,7 +25,7 @@ start_musicpi_services()
         (sleep 45 && PATH=$MUSICPI_PATH start_gpspipe.sh   > $LOGDIR/gpspipe.log   2>&1) &
         
         # start scan_wlan
-        (sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
+        #(sleep 50 && PATH=$MUSICPI_PATH start_scan_wlan.sh > $LOGDIR/scan_wlan.log 2>&1) &
     fi
     
     if [ -x /dev/i2c-1 ]; then
@@ -41,12 +41,12 @@ start_musicpi_services()
     mpc play 2>/dev/null
 
     # start MPD webinterface
-    PATH=$MUSICPI_PATH ympd -w 80 -u mpd >/dev/null 2>&1 &
+    (sleep 15 && PATH=$MUSICPI_PATH ympd -w 80 -u mpd > $LOGDIR/ympd.log 2>&1) &
 
     PATH=$MUSICPI_PATH musicpi-presence -d
 }
 
 # set audio level to 0db
-amixer set PCM 0
+amixer set PCM 0 > /dev/null 2>&1
 
 start_musicpi_services
