@@ -47,6 +47,10 @@ start_musicpi_services()
 }
 
 # set audio level to 0db
+
+#  0 dB
 amixer set PCM 0 > /dev/null 2>&1
+# +4 dB
+#amixer set PCM 400 > /dev/null 2>&1
 
 start_musicpi_services
