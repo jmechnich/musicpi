@@ -30,12 +30,14 @@ do_copy()
 
 for f in bin/* sbin/*;  do do_symlink "$PWD/$f" /usr/local/$f;  done
 
-do_symlink "$PWD/etc/interfaces"      /etc/network/interfaces
-do_symlink "$PWD/etc/dnsmasq.conf"    /etc/dnsmasq.conf.musicpi
-do_copy    "$PWD/etc/smbd.service"    /etc/avahi/services/smbd.service
-do_copy    "$PWD/etc/start_gpxlogger" /etc/cron.d/start_gpxlogger
-do_copy    "$PWD/etc/start_gpspipe"   /etc/cron.d/start_gpspipe
-do_copy    "$PWD/etc/start_scan_wlan" /etc/cron.d/start_scan_wlan
+do_symlink "$PWD/etc/interfaces"         /etc/network/interfaces
+do_symlink "$PWD/etc/musicpi_svcrestart" /etc/network/if-down.d/musicpi_svcrestart
+do_symlink "$PWD/etc/musicpi_svcrestart" /etc/network/if-up.d/musicpi_svcrestart
+do_symlink "$PWD/etc/dnsmasq.conf"       /etc/dnsmasq.conf.musicpi
+do_copy    "$PWD/etc/smbd.service"       /etc/avahi/services/smbd.service
+do_copy    "$PWD/etc/start_gpxlogger"    /etc/cron.d/start_gpxlogger
+do_copy    "$PWD/etc/start_gpspipe"      /etc/cron.d/start_gpspipe
+do_copy    "$PWD/etc/start_scan_wlan"    /etc/cron.d/start_scan_wlan
 
 echo "Updating   /etc/rc.local"
 if grep -q '^\. .*etc/rc\.local' /etc/rc.local; then

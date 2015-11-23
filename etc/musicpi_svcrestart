@@ -1,0 +1,45 @@
+#!/bin/sh
+
+# quit if we're called for the loopback
+if [ "$IFACE" = lo ]; then
+	exit 0
+fi
+
+do_start () {
+    /etc/init.d/gmediarenderer start
+}
+
+do_stop () {
+    /etc/init.d/gmediarenderer stop
+}
+
+case "$MODE" in 
+	start)
+		do_start
+		case "$PHASE" in
+			pre-up)
+				;;
+			post-up)
+				;;
+		esac
+		;;
+
+	stop)
+		do_stop
+		case "$PHASE" in
+			pre-down)
+				;;
+			post-down)
+				;;
+			*)
+				exit 1
+				;;
+		esac
+		;;
+	
+	*)
+		exit 1
+		;;
+esac
+
+exit 0
