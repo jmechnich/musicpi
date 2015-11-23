@@ -17,3 +17,4 @@ python-psutil
 python-dateutil
 python-daemon
 dnsmasq
+gstreamer0.10-plugins-bad
