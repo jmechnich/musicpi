@@ -40,6 +40,8 @@ start_musicpi_services()
     fi
     mpc play 2>/dev/null
 
+    PATH=$MUSICPI_PATH systemcontrol.sh &
+
     # start MPD webinterface
     (sleep 15 && PATH=$MUSICPI_PATH ympd -w 80 -u mpd > $LOGDIR/ympd.log 2>&1) &
 
