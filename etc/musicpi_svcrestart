@@ -1,16 +1,18 @@
 #!/bin/sh
 
 # quit if we're called for the loopback
-if [ "$IFACE" = lo ]; then
+if [ "$IFACE" != wlan0 ]; then
 	exit 0
 fi
 
 do_start () {
-    /etc/init.d/gmediarenderer start
+    #systemctl restart gmediarender
+    killall gmediarender
+    /etc/init.d/gmediarender restart
 }
 
 do_stop () {
-    /etc/init.d/gmediarenderer stop
+    true
 }
 
 case "$MODE" in 
