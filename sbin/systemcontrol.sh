@@ -1,29 +1,42 @@
 #!/bin/sh
 
 log="logger -t `basename $0`"
-PORT=6789
+beep="play -q -n synth 0.1 sin 1760"
+doublebeep="play -q -n synth 0.1 sine 1760 pad 0 0.2 repeat 1"
+port=6789
 
 while true; do
-    ANS=`nc -l $PORT`
-    case "$ANS" in
+    ans=`nc -l $port`
+    case "$ans" in
         mpd_dynamic)
             if ! pgrep mpd_dynamic >/dev/null; then
                 $log "Starting mpd_dynamic"
                 sudo -u mechnich mpd_dynamic >/dev/null &
+                $beep
             else
-                $log "Not starting mpd_dynamic: already running"
+                $log "Killing mpd_dynamic"
+                killall mpd_dynamic
+                $doublebeep
             fi
             ;;
         reboot)
             $log "Rebooting"
             shutdown -r now
+            $beep
             ;;
         shutdown)
             $log "Shutting down"
             shutdown -h now
+            $beep
+            ;;
+        beep)
+            $beep
+            ;;
+        doublebeep)
+            $doublebeep
             ;;
         *)
-            $log "Unknown command '$ANS'"
+            $log "Unknown command '$ans'"
             ;;
     esac
 done
