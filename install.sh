@@ -56,5 +56,22 @@ sudo dd of=/etc/hostapd.conf.musicpi status=none <<EOF
 interface=wlan0
 driver=rtl871xdrv
 ssid=`hostname`
-channel=6
+channel=1
 EOF
+
+#sudo dd of=/etc/hostapd.conf.musicpi status=none <<EOF
+#interface=wlan0
+#driver=rtl871xdrv
+#ssid=`hostname`
+#channel=1
+#hw_mode=g
+#auth_algs=2
+#ignore_broadcast_ssid=0
+#wpa=2
+#wpa_passphrase=`hostname`pass
+#wpa_key_mgmt=WPA-PSK
+#wpa_pairwise=TKIP
+#rsn_pairwise=CCMP
+#macaddr_acl=0
+#beacon_int=50
+#EOF
