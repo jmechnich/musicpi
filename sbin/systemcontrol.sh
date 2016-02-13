@@ -21,13 +21,14 @@ while true; do
             ;;
         reboot)
             $log "Rebooting"
-            shutdown -r now
             $beep
+            shutdown -r now
             ;;
         shutdown)
             $log "Shutting down"
+            $doublebeep
+            killall -9 gmediarender
             shutdown -h now
-            $beep
             ;;
         beep)
             $beep

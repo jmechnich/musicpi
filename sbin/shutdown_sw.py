@@ -20,6 +20,8 @@ while True:
         if GPIO.input(17) == 0:
                 blink()
                 GPIO.output(22, GPIO.HIGH)
-                subprocess.call(["shutdown", "-h", "now"])
+                # speed up shutdown
+                subprocess.call("killall -9 gmediarender".split())
+                subprocess.call("shutdown -h now".split())
                 break
 	time.sleep(1)
