@@ -3,7 +3,8 @@
 start_musicpi_services()
 {
     MUSICPI_PATH=/usr/local/sbin:/usr/local/bin:$PATH
-    
+    USER=`id -un 1000`
+
     # start shairport as daemon 
     PATH=$MUSICPI_PATH shairport -d
     
@@ -34,10 +35,12 @@ start_musicpi_services()
     fi
     
     # start MPD playback
-    if [ `mpc playlist 2>/dev/null | wc -l` -eq 0 ]; then
-        mpc load Favorites 2>/dev/null
-        mpc shuffle 2>/dev/null
-    fi
+    #if [ `mpc playlist 2>/dev/null | wc -l` -eq 0 ]; then
+    #    mpc load Favorites 2>/dev/null
+    #    mpc shuffle 2>/dev/null
+    #fi
+    sudo -u $USER mpd_dynamic >/dev/null &
+
     mpc play 2>/dev/null
 
     PATH=$MUSICPI_PATH systemcontrol.sh &

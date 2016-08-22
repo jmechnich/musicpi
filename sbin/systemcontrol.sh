@@ -4,6 +4,7 @@ log="logger -t `basename $0`"
 beep="play -q -n synth 0.1 sin 1760"
 doublebeep="play -q -n synth 0.1 sine 1760 pad 0 0.2 repeat 1"
 port=6789
+user=`id -un 1000`
 
 while true; do
     ans=`nc -l $port`
@@ -11,7 +12,7 @@ while true; do
         mpd_dynamic)
             if ! pgrep mpd_dynamic >/dev/null; then
                 $log "Starting mpd_dynamic"
-                sudo -u mechnich mpd_dynamic >/dev/null &
+                sudo -u $user mpd_dynamic >/dev/null &
                 $beep
             else
                 $log "Killing mpd_dynamic"
